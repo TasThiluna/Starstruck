@@ -3,31 +3,44 @@ using System.Linq;
 
 public static class chessMoves
 {
-    public static string rookMove(string[] cluster, string star, bool invert = false)
+    public static string move(int pieceInfo, string cluster, char star)
+    {
+        switch (pieceInfo >> 1)
+        {
+            case 0: return rookMove(cluster, star, (pieceInfo & 1) != 0);
+            case 1: return knightMove(cluster, star, (pieceInfo & 1) != 0);
+            case 2: return kingMove(cluster, star, (pieceInfo & 1) != 0);
+            case 3: return bishopMove(cluster, star, (pieceInfo & 1) != 0);
+            case 4: return queenMove(cluster, star, (pieceInfo & 1) != 0);
+            default: throw new InvalidOperationException(string.Format("Invalid piece info: {0}", pieceInfo));
+        }
+    }
+
+    public static string rookMove(string cluster, char star, bool invert = false)
     {
         var result = "";
-        var mainIx = Array.IndexOf(cluster, star);
-        foreach (string str in cluster)
+        var mainIx = cluster.IndexOf(star);
+        foreach (var str in cluster)
         {
-            if (str == "█")
+            if (str == '█')
                 continue;
             else if (str == star)
                 continue;
-            var ix = Array.IndexOf(cluster, str);
+            var ix = cluster.IndexOf(str);
             if (ix % 8 == mainIx % 8 || ix / 8 == mainIx / 8)
                 result += str;
         }
         if (!invert)
             return result;
         else
-            return cluster.Where(s => s != star && s != "█" && !result.Contains(s)).Join("");
+            return cluster.Where(s => s != star && s != '█' && !result.Contains(s)).Join("");
     }
 
-    public static string knightMove(string[] cluster, string star, bool invert = false)
+    public static string knightMove(string cluster, char star, bool invert = false)
     {
         var result = "";
-        var mainIx = Array.IndexOf(cluster, star);
-        var ix = Array.IndexOf(cluster, star);
+        var mainIx = cluster.IndexOf(star);
+        var ix = cluster.IndexOf(star);
         if (ix / 8 != 0 && ix / 8 != 1)
         {
             if (ix % 8 != 0)
@@ -56,17 +69,17 @@ public static class chessMoves
             if (ix / 8 != 7)
                 result += cluster[ix + 10];
         }
-        result = new string(result.Where(ch => ch != '█' && ch.ToString() != star).ToArray());
+        result = new string(result.Where(ch => ch != '█' && ch != star).ToArray());
         if (!invert)
             return result;
         else
-            return cluster.Where(s => s != star && s != "█" && !result.Contains(s)).Join("");
+            return cluster.Where(s => s != star && s != '█' && !result.Contains(s)).Join("");
     }
 
-    public static string kingMove(string[] cluster, string star, bool invert = false)
+    public static string kingMove(string cluster, char star, bool invert = false)
     {
         var result = "";
-        var ix = Array.IndexOf(cluster, star);
+        var ix = cluster.IndexOf(star);
         var leftBorder = ix % 8 == 0;
         var rightBorder = ix % 8 == 7;
         var upBorder = ix / 8 == 0;
@@ -87,17 +100,17 @@ public static class chessMoves
             result += cluster[ix - 8];
         if (!downBorder)
             result += cluster[ix + 8];
-        result = new string(result.Where(ch => ch != '█' && ch.ToString() != star).ToArray());
+        result = new string(result.Where(ch => ch != '█' && ch != star).ToArray());
         if (!invert)
             return result;
         else
-            return cluster.Where(s => s != star && s != "█" && !result.Contains(s)).Join("");
+            return cluster.Where(s => s != star && s != '█' && !result.Contains(s)).Join("");
     }
 
-    public static string bishopMove(string[] cluster, string star, bool invert = false)
+    public static string bishopMove(string cluster, char star, bool invert = false)
     {
         var result = "";
-        var mainIx = Array.IndexOf(cluster, star);
+        var mainIx = cluster.IndexOf(star);
         var offsets = new[] { -9, -7, 7, 9 }; // UL, UR, DL, DR
         for (int i = 0; i < 4; i++)
         {
@@ -115,7 +128,7 @@ public static class chessMoves
             var firstTime = true;
             while (horiLoopCheck(space) && vertLoopCheck(space) && space >= 0 && space < 64)
             {
-                if (!firstTime && cluster[space] != "█")
+                if (!firstTime && cluster[space] != '█')
                     result += cluster[space];
                 firstTime = false;
                 space += offsets[i];
@@ -124,16 +137,16 @@ public static class chessMoves
         if (!invert)
             return result;
         else
-            return cluster.Where(s => s != star && s != "█" && !result.Contains(s)).Join("");
+            return cluster.Where(s => s != star && s != '█' && !result.Contains(s)).Join("");
     }
 
-    public static string queenMove(string[] cluster, string star, bool invert = false)
+    public static string queenMove(string cluster, char star, bool invert = false)
     {
         var combo = rookMove(cluster, star) + bishopMove(cluster, star);
         if (!invert)
             return combo;
         else
-            return cluster.Where(s => s != star && s != "█" && !combo.Contains(s)).Join("");
+            return cluster.Where(s => s != star && s != '█' && !combo.Contains(s)).Join("");
     }
 
 }

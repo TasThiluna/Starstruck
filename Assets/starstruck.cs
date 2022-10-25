@@ -49,69 +49,63 @@ public class starstruck : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(SpaceMovement());
-        clusterUsed = rnd.Range(0, 3);
-        clusterUsed = 0;
-        var clusterArray = clusters[clusterUsed].ToCharArray().Select(ch => ch.ToString()).ToArray();
-
         var tries = 0;
-    tryAgain:
+        tryAgain:
         tries++;
-        var cluedStars = new string[3] { "", "", "" };
-        var deductions = new string[3] { "", "", "" };
-        for (int i = 0; i < 3; i++)
-        {
-            clueStars[i] = clusters[clusterUsed].Where(ch => ch != '█').PickRandom().ToString();
-            cluePieces[i] = rnd.Range(0, 5);
-            clueNegations[i] = rnd.Range(0, 2) == 0;
-            switch (cluePieces[i])
-            {
-                case 0:
-                    cluedStars[i] = chessMoves.rookMove(clusterArray, clueStars[i], clueNegations[i]);
-                    break;
-                case 1:
-                    cluedStars[i] = chessMoves.knightMove(clusterArray, clueStars[i], clueNegations[i]);
-                    break;
-                case 2:
-                    cluedStars[i] = chessMoves.kingMove(clusterArray, clueStars[i], clueNegations[i]);
-                    break;
-                case 3:
-                    cluedStars[i] = chessMoves.bishopMove(clusterArray, clueStars[i], clueNegations[i]);
-                    break;
-                case 4:
-                    cluedStars[i] = chessMoves.queenMove(clusterArray, clueStars[i], clueNegations[i]);
-                    break;
-            }
+        clusterUsed = rnd.Range(0, 3);
 
-            if (i == 0)
-                deductions[0] = new string(cluedStars[0].OrderBy(ch => ch).ToArray());
-            if (i == 1)
+        var chars = clusters[clusterUsed].Where(ch => ch != '█').OrderBy(c => c).ToArray();
+        var pieces = Enumerable.Range(0, 3).Select(i => rnd.Range(0, 10)).ToArray();
+        int ofs1 = rnd.Range(0, chars.Length);
+        int ofs2 = rnd.Range(0, chars.Length);
+        int ofs3 = rnd.Range(0, chars.Length);
+
+        char? answer = null;
+        char[] piecePositions = null;
+
+        for (var ir1 = 0; ir1 < chars.Length; ir1++)
+        {
+            var i1 = (ir1 + ofs1) % chars.Length;
+            var cluedStars1 = chessMoves.move(pieces[0], clusters[clusterUsed], chars[i1]);
+            for (var ir2 = 0; ir2 < chars.Length; ir2++)
             {
-                deductions[1] = clusterArray.Where(s => deductions[0].Contains(s) && cluedStars[1].Contains(s)).OrderBy(s => s).Join("");
-                if (deductions[0] == deductions[1])
-                    goto tryAgain;
+                var i2 = (ir2 + ofs2) % chars.Length;
+                if (i2 == i1)
+                    continue;
+                var cluedStars2 = chessMoves.move(pieces[1], clusters[clusterUsed], chars[i2]);
+                if (cluedStars1.Intersect(cluedStars2).Count() < 2)
+                    continue;
+                for (var ir3 = 0; ir3 < chars.Length; ir3++)
+                {
+                    var i3 = (ir3 + ofs3) % chars.Length;
+                    if (i3 == i1 || i3 == i2)
+                        continue;
+                    var cluedStars3 = chessMoves.move(pieces[2], clusters[clusterUsed], chars[i3]);
+                    if (cluedStars1.Intersect(cluedStars3).Count() < 2 || cluedStars2.Intersect(cluedStars3).Count() < 2)
+                        continue;
+                    var result = cluedStars1.Intersect(cluedStars2).Intersect(cluedStars3).ToArray();
+                    if (result.Length != 1)
+                        continue;
+                    answer = result[0];
+                    piecePositions = new char[] { chars[i1], chars[i2], chars[i3] };
+                    goto found;
+                }
             }
-            // Uncommenting this hangs the game, which means you don't always need 3 stars. I'm leaving it here incase it's salvagable.
-            /*else
-            {
-                deductions[2] = clusterArray.Where(s => deductions[1].Contains(s) && cluedStars[2].Contains(s)).OrderBy(s => s).Join("");
-               if (deductions[2] == deductions[1])
-                   goto tryAgain;
-            }*/
         }
-        if (deductions[2].Length != 1)
+        found:
+        if (answer == null)
+        {
+            Debug.LogFormat("There seems to be no way to place pieces {0}, {1}, {2} on cluster {3}.", pieces[0], pieces[1], pieces[2], clusterUsed);
             goto tryAgain;
-        Debug.Log(deductions[2][0]);
-
-        Debug.Log("Tries: " + tries);
-        var pieceNames = new[] { "rook", "knight", "king", "bishop", "queen" };
-        Debug.Log(cluedStars.Join(", "));
-        Debug.Log(deductions.Join(", "));
-        for (int i = 0; i < 3; i++)
-        {
-            Debug.Log(clueStars[i] + ", " + pieceNames[cluePieces[i]] + ", " + (clueNegations[i] ? "INVERT" : "NORMAL"));
         }
-        Debug.LogFormat("[Starstruck #{0}] We are in the {1}.", moduleId, new[] { "Faulty Butterfly Cluster", "Whirlboolean Galaxy", "The Anametaxies" }[clusterUsed]);
+
+        Debug.LogFormat("Cluster: {6}; pieces: {0} on {1}, {2} on {3}, {4} on {5}; answer: {7} ({8} tries).", pieceName(pieces[0]), piecePositions[0], pieceName(pieces[1]), piecePositions[1], pieceName(pieces[2]), piecePositions[2], clusterUsed, answer, tries);
+        StartCoroutine(SpaceMovement());
+    }
+
+    private string pieceName(int pieceInfo)
+    {
+        return string.Format("{0} {1}", "rook,knight,king,bishop,queen".Split(',')[pieceInfo >> 1], (pieceInfo & 1) != 0 ? "inverted" : "normal");
     }
 
     private void PressButton()
