@@ -39,7 +39,6 @@ public static class chessMoves
     public static string knightMove(string cluster, char star, bool invert = false)
     {
         var result = "";
-        var mainIx = cluster.IndexOf(star);
         var ix = cluster.IndexOf(star);
         if (ix / 8 != 0 && ix / 8 != 1)
         {
