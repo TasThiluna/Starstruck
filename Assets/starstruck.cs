@@ -225,7 +225,7 @@ public class starstruck : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogFormat("[Starstruck #{0}] A slider position was incorrect. Module solved!", moduleId);
+                    Debug.LogFormat("[Starstruck #{0}] A slider position was incorrect. Strike!", moduleId);
                     module.HandleStrike();
                 }
             }
@@ -384,12 +384,14 @@ public class starstruck : MonoBehaviour
     private IEnumerator FlyingStars()
     {
         var firstTime = true;
+        foreach (TextMesh star in extraStars)
+            star.gameObject.SetActive(true);
         while (starsFlying)
         {
             for (int i = 0; i < 6; i++)
             {
                 extraStars[i].transform.localPosition = new Vector3(.0671f, .0086f, i % 2 == 0 ? .0134f : -.0134f);
-                extraStars[i].text = rnd.Range(0, 500) == 0 ? "ඞ" : "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm12345678@\"90!@#$%^&*()-=_+,./;:<>?\\|[]{}".PickRandom().ToString();
+                extraStars[i].text = rnd.Range(0, 500) == 0 ? "ඞ" : "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm12345678@90!@#$%^&*()-=_+,./;:<>?\\|[]{}".PickRandom().ToString();
                 extraStars[i].color = starColors.PickRandom();
                 if (!firstTime)
                     StopCoroutine(extraStarRotation[i]);
@@ -462,11 +464,15 @@ public class starstruck : MonoBehaviour
         Debug.LogFormat("[Starstruck #{0}] Button was held. Resetting...", moduleId);
         timesOpened = 0;
         activeRotations.Clear();
+        starsFlying = false;
         if (submissionPhase)
         {
             StopCoroutine(submissionPhaseAnimation);
             foreach (TextMesh star in extraStars)
+            {
                 star.text = "";
+                star.gameObject.SetActive(false);
+            }
         }
         submissionPhase = false;
         canPlayResetSound = true;
