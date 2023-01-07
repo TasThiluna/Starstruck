@@ -56,6 +56,7 @@ public class starstruck : MonoBehaviour
     private string bottomRow = "5D4C3T2L1M";
     private string[] sliderNames = new[] { "top", "middle", "bottom" };
     private string[] positionNames = new[] { "outer left", "inner left", "middle", "inner right", "outer right" };
+    private bool shiftsAlreadyDone;
 
     private static int moduleIdCounter = 1;
     private int moduleId;
@@ -124,6 +125,8 @@ public class starstruck : MonoBehaviour
         pieces = pieces.ToArray();
         var solutionPosition = clusters[clusterUsed].IndexOf(answer.Value);
 
+        if (shiftsAlreadyDone)
+            goto postShift;
         for (int i = 0; i < 3; i++)
             viewingTimes[i] = new[] { -1, -1, -1 };
         var arraysFilled = 0;
@@ -149,7 +152,7 @@ public class starstruck : MonoBehaviour
                 else
                     Debug.LogFormat("[Starstruck #{0}] No unused time found above {1}.", moduleId, ch);
             }
-            if (bottomRow.Contains(ch))
+            else if (bottomRow.Contains(ch))
             {
                 if (!viewingTimes.Any(arr => arr[0] == bottomRowTimes[bottomRow.IndexOf(ch)]))
                 {
@@ -170,6 +173,8 @@ public class starstruck : MonoBehaviour
             bottomRow = shift(bottomRow, 10 - numNumbers);
             snIx = (snIx + 1) % 6;
         }
+        shiftsAlreadyDone = true;
+    postShift:
 
         Debug.LogFormat("[Starstruck #{0}] We are in The {1}.", moduleId, new[] { "Faulty Butterfly Cluster", "Whirlboolean Galaxy", "Anametaxies" }[clusterUsed]);
         for (int i = 0; i < 3; i++)
@@ -575,7 +580,10 @@ public class starstruck : MonoBehaviour
             }
         }
         else if (input == "colorblind" || input == "cb" || input == "colourblind")
+        {
+            yield return null;
             colorblindText.gameObject.SetActive(true);
+        }
     }
 
     private IEnumerator TwitchHandleForcedSolve()
